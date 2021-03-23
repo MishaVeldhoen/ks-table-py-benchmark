@@ -1,6 +1,7 @@
 from kaitaistruct import KaitaiStream
 from compiled.test_cell import TestCell
 from compiled.test_col_fixed import TestColFixed
+from generate_sample import N_COLUMN_REPS
 
 import time
 import random
@@ -42,11 +43,13 @@ for i in progressbar(range(num_iterations), "Running benchmark: ", 40):
         elif choice == 'test_col_fixed':
             k = TestColFixed(KaitaiStream(f))
             row_0_type = k.table.table_rows[0]
-            row_0 = [row_0_type.a, row_0_type.b, row_0_type.c, row_0_type.d]
+            row_0 = N_COLUMN_REPS * [row_0_type.a, row_0_type.b, row_0_type.c, row_0_type.d]
 
     t1 = time.time()
     assert len(k.table.table_rows) == 65536, 'len(k.table.table_rows) = {} must be {}'.format(len(k.table.table_rows), 65536)
-    assert row_0 == [0x7a46, 0x86b97d9c, 0.842150092124939, 0.5340359913176319], 'row_0 = {} does not match'.format(row_0)
+    if row_0 != N_COLUMN_REPS * [0x7a46, 0x86b97d9c, 0.842150092124939, 0.5340359913176319]:
+        breakpoint()
+    assert row_0 == N_COLUMN_REPS * [0x7a46, 0x86b97d9c, 0.842150092124939, 0.5340359913176319], 'row_0 = {} does not match'.format(row_0)
     times[choice].append((t1 - t0) * 1000)
 
 stats = [

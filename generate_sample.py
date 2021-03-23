@@ -1,9 +1,11 @@
 from kaitaistruct import KaitaiStream
 import random
 
-n_rows = 65536
-n_columns = 4
-column_types = [1, 2, 3, 4]
+N_ROWS = 65536
+N_COLUMNS_BASE = 4
+N_COLUMN_REPS = 5
+COLUMN_TYPES = N_COLUMN_REPS * [1, 2, 3, 4]
+N_COLUMNS = N_COLUMNS_BASE * N_COLUMN_REPS
 
 is_row_0_fixed = True
 
@@ -12,9 +14,9 @@ COL_U4 = 2
 COL_F4 = 3
 COL_F8 = 4
 
-assert len(column_types) == n_columns, 'len(column_types) = {} must be equal to n_columns = {}'.format(
-    len(column_types),
-    n_columns
+assert len(COLUMN_TYPES) == N_COLUMNS, 'len(COLUMN_TYPES) = {} must be equal to n_columns = {}'.format(
+    len(COLUMN_TYPES),
+    N_COLUMNS
 )
 
 pk_u1 = KaitaiStream.packer_u1
@@ -24,24 +26,25 @@ pk_f4le = KaitaiStream.packer_f4le
 pk_f8le = KaitaiStream.packer_f8le
 
 with open('./sample.bin', 'wb') as f:
-    f.write(pk_u4le.pack(n_rows))
-    f.write(pk_u1.pack(n_columns))
-    for t in column_types:
+    f.write(pk_u4le.pack(N_ROWS))
+    f.write(pk_u1.pack(N_COLUMNS))
+    for t in COLUMN_TYPES:
         f.write(pk_u2le.pack(t))
 
     if is_row_0_fixed:
-        assert column_types == [1, 2, 3, 4], 'column_types = {} does not match the row_0 format'.format(column_types)
-        row_0 = [0x7a46, 0x86b97d9c, 0.842150092124939, 0.5340359913176319]
+        assert COLUMN_TYPES == N_COLUMN_REPS * [1, 2, 3, 4], 'column_types = {} does not match the row_0 format'.format(COLUMN_TYPES)
+        row_0 = N_COLUMN_REPS * [0x7a46, 0x86b97d9c, 0.842150092124939, 0.5340359913176319]
 
         f.write(b'\x00')
-        f.write(pk_u2le.pack(row_0[0]))
-        f.write(pk_u4le.pack(row_0[1]))
-        f.write(pk_f4le.pack(row_0[2]))
-        f.write(pk_f8le.pack(row_0[3]))
+        for _ in range(N_COLUMN_REPS):
+            f.write(pk_u2le.pack(row_0[0]))
+            f.write(pk_u4le.pack(row_0[1]))
+            f.write(pk_f4le.pack(row_0[2]))
+            f.write(pk_f8le.pack(row_0[3]))
 
-    for y in range(n_rows - 1):
+    for y in range(N_ROWS - 1):
         f.write(b'\x00')
-        for t in column_types:
+        for t in COLUMN_TYPES:
             if t == COL_U2:
                 f.write(pk_u2le.pack(random.randrange(0, 0xffff)))
             elif t == COL_U4:
